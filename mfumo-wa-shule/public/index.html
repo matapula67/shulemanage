@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("shule_theme")==="dark"?"dark":"light")}catch(e){}</script>
+<title>Shule 26 · Mfumo wa matokeo</title>
+<link rel="stylesheet" href="/style.css">
+</head><body><div id="app"></div>
+<script src="/prefs.js"></script>
+<script>
+/* ---------- Vifaa vidogo ---------- */
+const $=s=>document.querySelector(s),v=i=>$('#'+i).value,
+esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api=(u,m='GET',b)=>fetch('/api'+u,{method:m,headers:{'Content-Type':'application/json'},body:b&&JSON.stringify(b)}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Hitilafu');return d});
+const opts=(l,n='name')=>l.map(x=>`<option value="${x.id}">${esc(x[n])}</option>`).join('');
+const SM=['A','B','C','D'],sm=a=>(a?'<option value="">Mikondo yote</option>':'')+SM.map(s=>`<option>${s}</option>`).join('');
+const Y=new Date().getFullYear();
+function toast(t,bad){const e=document.createElement('div');e.className='toast'+(bad?' bad':'');e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200)}
+const fail=e=>toast(e.message,1);
+const go=(u,b,f)=>api(u,'POST',b).then(f).catch(fail),
+ del=(u,f)=>confirm('Una uhakika?')&&api(u,'DELETE').then(f).catch(fail);
+
+/* ---------- Aikoni (SVG ndogo, mtindo wa Lucide) ---------- */
+const P={
+ cap:'<path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+ dash:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+ user:'<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+ users:'<path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/>',
+ chart:'<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ plus:'<path d="M5 12h14M12 5v14"/>',
+ trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+ down:'<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+ book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+ clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+ arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ eye:'<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>',
+ eyeoff:'<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="m2 2 20 20"/>',
+ lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+ shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+ spark:'<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-2.06L8 4l1.94 5.94L16 12z" transform="translate(4 0)"/>',
+ save:'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>',
+ print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>',
+ send:'<path d="M14.54 21.69a.5.5 0 0 0 .93-.04l6.5-19a.5.5 0 0 0-.64-.64l-19 6.5a.5.5 0 0 0-.04.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"/><path d="m21.85 2.15-10.94 10.94"/>',
+ trend:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
+ cal:'<path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+ chev:'<path d="m6 9 6 6 6-6"/>',
+ grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'
+};
+const ic=(n,s=18,w=1.8)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const brand=(light)=>`<div class="brand-lockup ${light?'brand-lockup-light':''}"><div class="brand-mark">${ic('cap',21,2.2)}<span>26</span></div><div><strong>Shule 26</strong><small>MATOKEO • MAENDELEO • UWAZI</small></div></div>`;
+
+/* ---------- Hali ya programu ---------- */
+let me,reg=false,page='',showPw=false,navOpen=false;
+const ROLE={admin:'Msimamizi',teacher:'Mwalimu',parent:'Mzazi'},INI={admin:'A',teacher:'M',parent:'W'};
+const NAV={
+ admin:[['overview','Muhtasari','dash','USIMAMIZI'],['students','Wanafunzi','cap'],['teachers','Walimu','user'],['parents','Wazazi','users'],['subs','Masomo','book'],['sheet','Matokeo yote','clip','TAARIFA ZA MASOMO'],['results','Analysis','chart']],
+ teacher:[['mine','Madarasa yangu','dash','UFUNDISHAJI']],
+ parent:[['kids','Matokeo ya watoto','chart','TAARIFA ZA MTOTO']]};
+const PAGES={overview:()=>overview(),students:()=>students(),teachers:()=>teachers(),parents:()=>parents(),subs:()=>subs(),sheet:()=>sheet(),results:()=>results(),mine:()=>mine(),kids:()=>kids()};
+const main=h=>{$('#main').innerHTML=h;window.scrollTo(0,0)};
+const loading=t=>main(`<div class="loading-page"><span class="button-spinner"></span> ${t||'Inapakia…'}</div>`);
+const heading=(eb,h,p,extra='')=>`<section class="page-heading"><div><p class="eyebrow">${eb}</p><h1>${h}</h1><p>${p}</p></div>${extra}</section>`;
+const empty=(icon,t,p)=>`<div class="empty-table"><span class="empty-table-icon">${ic(icon,22)}</span><strong>${t}</strong><p>${p||''}</p></div>`;
+const chip=n=>`<span class="average-chip ${n<45?'low':''}">${n}</span>`;
+
+/* ---------- Kuingia / kujisajili ---------- */
+async function init(){document.title='Shule 26 · Mfumo wa matokeo';me=await api('/me');me?shell(NAV[me.role][0][0]):loginView()}
+function loginView(){
+$('#app').innerHTML=`<main class="login-page">
+<section class="login-story"><div class="login-story-noise"></div>
+ <div class="story-header">${brand(1)}<span class="story-tag"><span class="status-dot"></span> Mfumo wa shule</span></div>
+ <div class="story-copy"><p class="eyebrow-light">USIMAMIZI WA TAARIFA ZA SHULE</p>
+  <h1>Kila hatua ya mwanafunzi,<br><em>inaonekana.</em></h1>
+  <p class="story-lead">Jukwaa moja la matokeo, taarifa na maendeleo ya wanafunzi — kwa walimu, wazazi na uongozi wa shule.</p>
+  <div class="story-benefits">
+   <div><span class="benefit-icon">${ic('chart',17)}</span><span><b>Uchambuzi wa matokeo</b><small>Fuatilia maendeleo ya kila muhula</small></span><span class="benefit-check">${ic('check',16)}</span></div>
+   <div><span class="benefit-icon">${ic('users',17)}</span><span><b>Wajibu ulio wazi</b><small>Kila mtumiaji huona taarifa zake tu</small></span><span class="benefit-check">${ic('check',16)}</span></div>
+  </div></div>
+ <div class="story-mini-panel"><div class="mini-panel-top"><span class="mini-chart-icon">${ic('book',15)}</span><span>MUHTASARI WA MASOMO</span><span class="mini-period">MUHULA 1</span></div>
+  <div class="mini-bars"><i style="height:42%"></i><i style="height:63%"></i><i style="height:54%"></i><i style="height:81%"></i><i style="height:72%"></i><i style="height:94%"></i><i style="height:76%"></i></div>
+  <div class="mini-panel-foot"><span>Maendeleo ya darasa</span><strong>+12.4% ${ic('spark',12)}</strong></div></div>
+ <div class="story-footer"><span>Imejengwa kwa shule zinazoweka maendeleo mbele.</span><span>© ${Y} SHULE 26</span></div>
+</section>
+<section class="login-side"><div class="login-card-wrap">
+ <div class="mobile-brand">${brand()}</div>
+ <div class="login-heading"><span class="login-greeting">${reg?'ANZA HAPA':'KARIBU TENA'}</span>
+  <h2>${reg?'Jisajili kama<br>msimamizi':'Ingia kwenye<br>akaunti yako'}</h2>
+  <p>${reg?'Unahitaji code ya usajili wa shule ili kuunda akaunti ya msimamizi.':'Tumia jina la mtumiaji na nenosiri ulilopewa na msimamizi wa shule.'}</p></div>
+ <form class="login-form" onsubmit="event.preventDefault();${reg?'doReg()':'login()'}">
+  ${reg?`<label for="n">Jina kamili</label><div class="input-with-icon"><span class="field-icon">${ic('user',16)}</span><input id="n" placeholder="Mfano: Mwalimu Mkuu" required></div>`:''}
+  <label for="u">Jina la mtumiaji</label><div class="input-with-icon"><span class="field-icon">@</span><input id="u" autocomplete="username" placeholder="Mfano: jina.mwalimu" required></div>
+  <div class="password-label-row"><label for="p">Nenosiri</label><span class="secure-label">${ic('lock',12)} Salama kwa mfumo</span></div>
+  <div class="input-with-icon"><span class="field-icon">${ic('lock',16)}</span><input id="p" type="${showPw?'text':'password'}" autocomplete="${reg?'new-password':'current-password'}" placeholder="Weka nenosiri lako" required><button class="password-toggle" type="button" aria-label="Onyesha/ficha nenosiri" onclick="showPw=!showPw;$('#p').type=showPw?'text':'password'">${ic('eye',17)}</button></div>
+  ${reg?`<label for="cd">Code ya usajili wa shule</label><div class="input-with-icon"><span class="field-icon">${ic('shield',16)}</span><input id="cd" placeholder="Code ya siri ya shule" required></div>`:''}
+  <div class="form-error" id="e" role="alert"></div>
+  <button type="submit" class="primary-button login-submit" id="sb">${reg?'Jisajili':'Ingia kwenye mfumo'} ${ic('arrow',17)}</button>
+ </form>
+ ${reg?'':`<button class="demo-access" type="button" onclick="$('#u').value='admin26';$('#p').value='demo2026'"><span class="demo-access-icon">${ic('shield',16)}</span><span><strong>Ingia kwa akaunti ya demo</strong><small>Weka username na nenosiri la mfano</small></span>${ic('arrow',15)}</button>
+ <div class="demo-warning"><span>i</span><p><strong>Akaunti ya majaribio:</strong> admin26 / demo2026. Badilisha nenosiri kabla ya kutumia mfumo kwa taarifa halisi za shule.</p></div>`}
+ <div class="login-help"><span>${reg?'Tayari una akaunti?':'Unahitaji akaunti ya admin?'}</span><span style="cursor:pointer" onclick="reg=!reg;loginView()">${reg?'Ingia hapa':'Jisajili kama Admin'}</span></div>
+</div>
+<div class="login-privacy">${ic('shield',14)}<span>Taarifa zako zinaonekana kulingana na jukumu lako.</span></div></section></main>`}
+async function login(){const b=$('#sb');b.disabled=true;try{me=await api('/login','POST',{username:v('u'),password:v('p')});shell(NAV[me.role][0][0])}catch(e){$('#e').textContent=e.message;b.disabled=false}}
+async function doReg(){try{await api('/register','POST',{name:v('n'),username:v('u'),password:v('p'),code:v('cd')});reg=false;loginView();toast('Umesajiliwa. Ingia sasa.')}catch(e){$('#e').textContent=e.message}}
+const logout=async()=>{await api('/logout','POST');reg=false;me=null;loginView()};
+
+/* ---------- Muundo mkuu (sidebar + topbar) ---------- */
+function shell(pg){
+ page=pg;const N=NAV[me.role],cur=N.find(n=>n[0]===page)||N[0],first=me.name.split(' ')[0];
+ $('#app').innerHTML=`<div class="app-shell">
+ <aside class="sidebar ${navOpen?'sidebar-open':''}" id="sb">
+  <div class="sidebar-brand"><div class="brand-mark">${ic('cap',21)}<span>26</span></div><div><strong>Shule <span>26</span></strong><small>MATOKEO & TAARIFA</small></div><button class="mobile-close icon-button" onclick="toggleNav(false)" aria-label="Funga menyu">${ic('x',19)}</button></div>
+  <div class="school-switcher"><div class="school-avatar">K</div><div><strong>Shule ya Sekondari</strong><small>Dashibodi ya ${ROLE[me.role].toLowerCase()}</small></div>${ic('chev',14)}</div>
+  <nav class="sidebar-nav" aria-label="Menyu kuu">${N.map(n=>`<div>${n[3]?`<p class="nav-group-label">${n[3]}</p>`:''}<button class="nav-link ${n[0]===page?'nav-link-active':''}" onclick="nav('${n[0]}')">${ic(n[2],18)}<span>${n[1]}</span>${n[0]==='results'?'<span class="nav-new">LIVE</span>':''}</button></div>`).join('')}</nav>
+  <div class="sidebar-bottom">
+   <div class="sidebar-note"><span class="note-spark">✦</span><div><strong>Matokeo yenye maana</strong><small>Fuatilia kila hatua ya ukuaji.</small></div></div>
+   <div class="sidebar-user"><div class="user-avatar">${INI[me.role]}</div><div class="user-details"><strong>${esc(me.name)}</strong><small>${ROLE[me.role]}</small></div><button class="icon-button logout-icon" title="Toka" onclick="logout()">${ic('out',16)}</button></div>
+  </div></aside>
+ ${navOpen?'<button class="mobile-scrim" aria-label="Funga menyu" onclick="toggleNav(false)"></button>':''}
+ <div class="workspace">
+  <header class="topbar"><button class="mobile-menu icon-button" aria-label="Fungua menyu" onclick="toggleNav(true)">${ic('menu',20)}</button>
+   <div class="breadcrumb"><span>Shule 26</span><span class="breadcrumb-slash">/</span><strong>${cur[1]}</strong></div>
+   <div class="topbar-right"><div class="topbar-context"><span class="status-dot"></span> Mfumo uko tayari</div><div class="topbar-divider"></div>
+    <div class="topbar-user"><span class="topbar-user-name">${esc(first)}</span><div class="user-avatar small-avatar">${INI[me.role]}</div><button class="topbar-logout" onclick="logout()" aria-label="Toka kwenye mfumo">${ic('out',15)}</button></div></div></header>
+  <main class="main-content" id="main"></main>
+  <footer class="workspace-footer"><span>Shule 26 <span class="footer-dot">•</span> Mfumo wa usimamizi wa matokeo</span><span>Data inahifadhiwa kwa usalama</span></footer>
+ </div></div>`;
+ PAGES[page]();
+}
+const nav=p=>{navOpen=false;shell(p)};
+function toggleNav(o){navOpen=o;$('#sb').classList.toggle('sidebar-open',o);const s=document.querySelector('.mobile-scrim');if(s)s.remove();if(o){const b=document.createElement('button');b.className='mobile-scrim';b.onclick=()=>toggleNav(false);$('.app-shell').appendChild(b)}}
+const termSel=(t=1)=>`<label class="field-block"><span>Muhula</span><select id="term"><option value="1" ${t==1?'selected':''}>Muhula 1</option><option value="2" ${t==2?'selected':''}>Muhula 2</option></select></label><label class="field-block year-field"><span>Mwaka</span><input id="year" type="number" value="${Y}"></label>`;
+
+/* ---------- ADMIN: Muhtasari ---------- */
+async function overview(){loading('Inachanganua taarifa za shule…');
+ try{const d=await api('/dashboard'),c=d.counts,today=new Intl.DateTimeFormat((window.LANG==='en'?'en-GB':'sw-TZ'),{weekday:'long',day:'numeric',month:'long'}).format(new Date()).toUpperCase();
+ const M=[['Wanafunzi',c.students,'cap','','Walioandikishwa'],['Walimu',c.teachers,'user','blue','Akaunti hai'],['Mitihani / test',c.exams,'clip','amber','Zilizohifadhiwa'],['Wastani wa matokeo',c.marks?c.average+'%':'—','book','purple',c.marks?c.marks+' alama zimeingizwa':'Hakuna matokeo bado']];
+ const mx=Math.max(100,...d.subjectAverages.map(s=>s.average));
+ main(`<div class="page-stack">
+ <section class="page-heading dashboard-heading"><div><p class="eyebrow">${today} · MUHTASARI WA SHULE</p><h1>Habari, ${esc(me.name)} <span class="heading-spark">✦</span></h1><p>Ufuatiliaji wa wanafunzi, walimu na mwenendo wa masomo kwa wakati mmoja.</p></div>
+  <div class="current-period"><span class="period-calendar">${Y}</span><span><small>MWAKA WA MASOMO</small><strong>${Y} / ${Y+1}</strong></span></div></section>
+ <section class="metric-grid">${M.map((m,i)=>`<article class="metric-card"><div class="metric-card-top"><span class="metric-icon ${m[3]}">${ic(m[2],18)}</span><span class="metric-index">0${i+1}</span></div><p class="metric-label">${m[0]}</p><div class="metric-value-row"><strong>${m[1]}</strong></div><p class="metric-note">${m[4]}</p></article>`).join('')}</section>
+ <section class="dashboard-grid">
+  <article class="panel"><div class="panel-heading"><div><p class="eyebrow">MUUNDO WA SHULE</p><h2>Madarasa yote</h2></div><span class="panel-count">${String(d.byClass.length).padStart(2,'0')} <span>madarasa</span></span></div>
+   <div class="class-grid">${d.byClass.map((x,i)=>`<div class="class-tile" style="cursor:pointer" onclick="nav('students')"><div class="class-tile-orbit orbit-${i+1}"><span>${esc(x.name.replace('Form ','F'))}</span></div><div class="class-tile-info"><strong>${esc(x.name)}</strong><span>${x.students} wanafunzi</span></div><span class="class-stream-count">${x.streams} mikondo</span></div>`).join('')}</div>
+   <div class="panel-footnote"><span class="footnote-dot"></span> Madarasa yanaonekana hata kabla ya wanafunzi kusajiliwa.</div></article>
+  <article class="panel"><div class="panel-heading"><div><p class="eyebrow">UCHAMBUZI WA SOMO</p><h2>Wastani kwa somo</h2></div><span class="chart-period">MATOKEO YOTE</span></div>
+   ${d.subjectAverages.length?`<div class="bar-chart">${d.subjectAverages.map(s=>`<div class="bar-col" title="${esc(s.subject)}: ${s.average}"><b>${s.average}</b><i style="height:${Math.max(3,s.average/mx*100*.82)}%"></i></div>`).join('')}</div><div class="bar-labels">${d.subjectAverages.map(s=>`<span>${esc(s.subject)}</span>`).join('')}</div>`
+   :`<div class="chart-empty"><span class="chart-empty-mark">${ic('book',21)}</span><strong>Uchambuzi utaonekana hapa</strong><p>Walimu wakihifadhi alama za kwanza, wastani kwa kila somo utaonekana.</p></div>`}
+   <div class="chart-legend"><span class="legend-pill"><i></i> Alama wastani (0–100)</span><span>Alama ya ufaulu: 30</span></div></article>
+ </section>
+ <section class="dashboard-grid dashboard-lower-grid">
+  <article class="panel"><div class="panel-heading"><div><p class="eyebrow">MATUKIO YA HIVI KARIBUNI</p><h2>Mitihani iliyohifadhiwa</h2></div><span class="subtle-count">${d.recent.length} karibuni</span></div>
+   ${d.recent.length?`<div class="recent-list">${d.recent.map(t=>`<div class="recent-row"><div class="recent-test-icon">${ic('clip',17)}</div><div class="recent-main"><strong>${esc(t.exam)}</strong><span>${esc(t.subject)} <i>·</i> ${esc(t.class)} ${esc(t.stream)} <i>·</i> ${t.n} wanafunzi</span></div><div class="recent-meta"><span>Muhula ${t.term}</span><small>Wastani ${t.avg}</small></div></div>`).join('')}</div>`
+   :`<div class="empty-inline"><span class="empty-inline-icon">${ic('clip',17)}</span><div><strong>Bado hakuna mitihani</strong><span>Baada ya mwalimu kuhifadhi alama, rekodi mpya itaonekana hapa.</span></div></div>`}</article>
+  <article class="panel admin-tip-panel"><div class="tip-emblem">${ic('book',19)}</div><p class="eyebrow">HATUA INAYOFUATA</p><h2>Jenga msingi wa taarifa sahihi</h2><p>Sajili wanafunzi na walimu, kisha wape walimu masomo wanayosimamia kabla ya kuingiza matokeo.</p>
+   <div class="tip-steps"><span><i>1</i> Sajili wanafunzi</span><span><i>2</i> Weka migawo ya walimu</span><span><i>3</i> Rekodi matokeo</span></div></article>
+ </section></div>`)}catch(e){main(empty('book','Hitilafu',esc(e.message)))}}
+
+/* ---------- ADMIN: Wanafunzi ---------- */
+let stClass='',stForm=false,stQ='';
+async function students(){loading('Inapakia orodha…');
+ const [cl,s,p]=await Promise.all([api('/classes'),api('/students'+(stClass?'?class_id='+stClass:'')),api('/users?role=parent')]);
+ window.ST=s;
+ const rows=()=>s.filter(x=>(x.name+' '+x.class+' '+x.stream).toLowerCase().includes(stQ.toLowerCase()));
+ window.stRows=()=>`${rows().map(x=>`<tr><td><div class="table-person"><span class="table-avatar">${esc(x.name.charAt(0))}</span><strong>${esc(x.name)}</strong></div></td><td><span class="class-pill">${esc(x.class)}</span></td><td><span class="stream-pill">${esc(x.stream)}</span></td><td>${esc(x.parent||'—')} <span class="muted-text">${esc(x.phone||'')}</span></td><td><button class="row-action danger-action" aria-label="Ondoa ${esc(x.name)}" onclick="del('/students/${x.id}',students)">${ic('trash',15)}</button></td></tr>`).join('')}`;
+ main(`<div class="page-stack">
+ ${heading('ORODHA YA WANAFUNZI','Wanafunzi','Sajili, tafuta na pangilia wanafunzi kwa darasa na mkondo.',`<button class="primary-button" onclick="stForm=!stForm;students()">${ic(stForm?'x':'plus',17)} ${stForm?'Funga fomu':'Sajili mwanafunzi'}</button>`)}
+ <section class="class-filter-strip">${cl.map(c=>`<div class="class-filter-card ${stClass==c.id?'selected':''}" onclick="stClass=stClass==${c.id}?'':${c.id};students()"><span class="class-filter-abbr">${esc(c.name.replace('Form ','F'))}</span><div><strong>${c.n}</strong><small>${c.n==1?'mwanafunzi':'wanafunzi'}</small></div></div>`).join('')}</section>
+ ${stForm?`<section class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">TAARIFA ZA MSINGI</p><h2>Ongeza mwanafunzi</h2></div><span class="panel-step">01 / 01</span></div>
+  <form class="form-grid" onsubmit="event.preventDefault();addStudent()">
+   <label class="field-block field-span-2"><span>Jina kamili <b>*</b></span><input id="sn" placeholder="Mfano: Amina Juma Mwinyi" required minlength="2"></label>
+   <label class="field-block"><span>Darasa <b>*</b></span><select id="sc">${opts(cl)}</select></label>
+   <label class="field-block"><span>Mkondo <b>*</b></span><select id="ss">${sm()}</select></label>
+   <label class="field-block field-span-2"><span>Mzazi <small>(hiari)</small></span><select id="sp"><option value="">— Hakuna —</option>${opts(p)}</select></label>
+   <div class="form-actions field-span-2"><span>Mzazi anaweza kuunganishwa baadaye kupitia ukurasa wa Wazazi.</span><button class="primary-button">Hifadhi mwanafunzi</button></div>
+  </form></section>`:''}
+ <section class="panel data-panel"><div class="panel-heading roster-heading"><div><p class="eyebrow">ORODHA HAI</p><h2>Wanafunzi wote <span class="count-bubble">${s.length}</span></h2></div>
+  <div class="table-actions"><div class="table-search">${ic('search',16)}<input id="stq" value="${esc(stQ)}" oninput="stQ=this.value;$('#stt').innerHTML=stRows()" placeholder="Tafuta jina au darasa…"></div><button class="outline-button" onclick="csv()">${ic('down',15)} Pakua</button></div></div>
+  ${s.length?`<div class="table-scroll"><table class="data-table"><thead><tr><th>MWANAFUNZI</th><th>DARASA</th><th>MKONDO</th><th>MZAZI</th><th></th></tr></thead><tbody id="stt"></tbody></table></div>`
+  :empty('users','Bado hakuna mwanafunzi aliyesajiliwa.','Anza kwa kusajili wanafunzi. Orodha itaunganishwa na masomo yao moja kwa moja.')}</section></div>`);
+ if(s.length)$('#stt').innerHTML=stRows();
+}
+const addStudent=()=>go('/students',{name:v('sn'),class_id:v('sc'),stream:v('ss'),parent_id:v('sp')},()=>{toast('Mwanafunzi amesajiliwa.');stForm=false;students()});
+function csv(){if(!ST.length)return toast('Hakuna wanafunzi wa kupakua bado.',1);
+ const t=[(window.LANG==='en'?'Name,Class,Stream,Parent':'Jina,Darasa,Mkondo,Mzazi'),...ST.map(x=>`"${x.name}","${x.class}","${x.stream}","${x.parent||''}"`)].join('\n'),a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='wanafunzi-shule26.csv';a.click();URL.revokeObjectURL(a.href)}
+
+/* ---------- ADMIN: Walimu ---------- */
+async function teachers(){loading();
+ const [t,c,s,a]=await Promise.all(['/users?role=teacher','/classes','/subjects','/assignments'].map(u=>api(u)));
+ main(`<div class="page-stack">${heading('USIMAMIZI WA WALIMU','Walimu','Sajili walimu na uwapangie darasa, mkondo na somo.')}
+ <section class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">AKAUNTI MPYA</p><h2>Sajili mwalimu</h2></div><span class="panel-step">01</span></div>
+  <form class="form-grid" onsubmit="event.preventDefault();addTeacher()">
+   <label class="field-block"><span>Jina kamili <b>*</b></span><input id="tn" required></label>
+   <label class="field-block"><span>Jina la mtumiaji <b>*</b></span><input id="tu" required></label>
+   <label class="field-block"><span>Nenosiri <b>*</b> <small>(herufi 6+)</small></span><input id="tw" type="text" minlength="6" required></label>
+   <label class="field-block"><span>Simu <small>(hiari)</small></span><input id="tph"></label>
+   <div class="form-actions field-span-2"><span>Mwalimu atatumia username na nenosiri hili kuingia.</span><button class="primary-button">Sajili mwalimu</button></div></form></section>
+ <section class="panel assignment-panel"><div class="panel-heading"><div><p class="eyebrow">MGAWO WA MASOMO</p><h2>Mpangie darasa, mkondo na somo</h2></div></div>
+  ${t.length?`<div class="assignment-form"><label class="field-block"><span>Mwalimu</span><select id="at">${opts(t)}</select></label><label class="field-block"><span>Darasa</span><select id="ac">${opts(c)}</select></label><label class="field-block"><span>Mkondo</span><select id="am">${sm()}</select></label><label class="field-block"><span>Somo</span><select id="as">${opts(s)}</select></label><button class="primary-button assignment-submit" onclick="go('/assignments',{teacher_id:v('at'),class_id:v('ac'),stream:v('am'),subject_id:v('as')},()=>{toast('Mgawo umehifadhiwa.');teachers()})">Mpange</button></div>`:'<div class="empty-inline"><span class="empty-inline-icon">'+ic('user',17)+'</span><div><strong>Sajili mwalimu kwanza</strong><span>Baada ya hapo unaweza kumpangia masomo.</span></div></div>'}</section>
+ <section class="panel data-panel"><div class="panel-heading"><div><p class="eyebrow">WALIMU WOTE</p><h2>Walimu na mgawanyo <span class="count-bubble">${t.length}</span></h2></div></div>
+  ${t.length?`<div class="account-list">${t.map(x=>`<div class="account-card"><div class="account-card-top"><span class="table-avatar teacher-avatar">${esc(x.name.charAt(0))}</span><div class="account-main"><strong>${esc(x.name)}</strong><span>@${esc(x.username)}${x.phone?' · '+esc(x.phone):''}</span></div><button class="row-action danger-action" aria-label="Ondoa" onclick="del('/users/${x.id}',teachers)">${ic('trash',15)}</button></div>
+   <div class="account-assignments">${a.filter(z=>z.teacher_id==x.id).map(z=>`<span class="assignment-chip">${ic('book',11)} ${esc(z.class)} ${esc(z.stream)} <i>·</i> ${esc(z.subject)} <button title="Ondoa mgawo" onclick="del('/assignments/${z.id}',teachers)">✕</button></span>`).join('')||'<span class="muted-note">Bado hajapangiwa somo.</span>'}</div></div>`).join('')}</div>`:empty('user','Bado hakuna mwalimu.','Sajili mwalimu wa kwanza kwa kutumia fomu iliyo juu.')}</section></div>`)}
+const addTeacher=()=>go('/users',{role:'teacher',name:v('tn'),username:v('tu'),password:v('tw'),phone:v('tph')},()=>{toast('Mwalimu amesajiliwa.');teachers()});
+
+/* ---------- ADMIN: Wazazi ---------- */
+async function parents(){loading();
+ const [p,s]=await Promise.all([api('/users?role=parent'),api('/students')]);
+ main(`<div class="page-stack">${heading('USIMAMIZI WA WAZAZI','Wazazi','Sajili wazazi kisha uwaunganishe na watoto wao ili waone matokeo.')}
+ <section class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">AKAUNTI MPYA</p><h2>Sajili mzazi</h2></div><span class="panel-step">01</span></div>
+  <form class="form-grid" onsubmit="event.preventDefault();go('/users',{role:'parent',name:v('pn'),phone:v('pph'),email:v('pe'),username:v('pu'),password:v('pw')},()=>{toast('Mzazi amesajiliwa.');parents()})">
+   <label class="field-block"><span>Jina la mzazi <b>*</b></span><input id="pn" required></label>
+   <label class="field-block"><span>Namba ya simu <small>(hiari)</small></span><input id="pph" placeholder="0712 345 678"></label>
+   <label class="field-block"><span>Email <small>(hiari)</small></span><input id="pe" type="email"></label>
+   <label class="field-block"><span>Jina la mtumiaji <b>*</b></span><input id="pu" required></label>
+   <label class="field-block field-span-2"><span>Nenosiri <b>*</b> <small>(herufi 6+)</small></span><input id="pw" minlength="6" required></label>
+   <div class="form-actions field-span-2"><span>Kisha mwunganishe na mtoto kwenye kisanduku cha chini.</span><button class="primary-button">Sajili mzazi</button></div></form></section>
+ <section class="panel link-child-panel"><div class="panel-heading"><div><p class="eyebrow">UNGANISHA</p><h2>Mzazi na mwanafunzi</h2></div><span class="link-panel-icon">${ic('users',18)}</span></div>
+  ${p.length&&s.length?`<div class="link-form"><label class="field-block"><span>Mzazi</span><select id="lp">${opts(p)}</select></label><label class="field-block"><span>Mwanafunzi</span><select id="ls">${s.map(x=>`<option value="${x.id}">${esc(x.name)} (${esc(x.class)} ${esc(x.stream)})</option>`).join('')}</select></label><button class="outline-button" onclick="go('/students/'+v('ls')+'/parent',{parent_id:v('lp')},()=>{toast('Wameunganishwa.');parents()})">Unganisha</button></div>`
+  :'<div class="empty-inline"><span class="empty-inline-icon">'+ic('users',17)+'</span><div><strong>Unahitaji mzazi na mwanafunzi</strong><span>Sajili wote wawili kabla ya kuwaunganisha.</span></div></div>'}</section>
+ <section class="panel data-panel"><div class="panel-heading"><div><p class="eyebrow">WAZAZI WOTE</p><h2>Wazazi na watoto wao <span class="count-bubble">${p.length}</span></h2></div></div>
+  ${p.length?`<div class="account-list">${p.map(x=>`<div class="account-card"><div class="account-card-top"><span class="table-avatar parent-avatar">${esc(x.name.charAt(0))}</span><div class="account-main"><strong>${esc(x.name)}</strong><span>${esc(x.phone||'Hana simu')}${x.email?' · '+esc(x.email):''}</span></div><button class="row-action danger-action" aria-label="Ondoa" onclick="del('/users/${x.id}',parents)">${ic('trash',15)}</button></div>
+   <div class="linked-children">${s.filter(z=>z.parent_id==x.id).map(z=>`<span class="child-chip"><span><b>${esc(z.name)}</b><small>${esc(z.class)} · ${esc(z.stream)}</small></span></span>`).join('')||'<span class="muted-note">Bado hajaunganishwa na mwanafunzi.</span>'}</div></div>`).join('')}</div>`:empty('users','Bado hakuna mzazi.','Sajili mzazi wa kwanza kwa kutumia fomu iliyo juu.')}</section></div>`)}
+
+/* ---------- ADMIN: Masomo ---------- */
+async function subs(){loading();const s=await api('/subjects');
+ main(`<div class="page-stack">${heading('MASOMO YA SHULE','Masomo','Orodha ya masomo yanayotumika kwenye matokeo ya wanafunzi.')}
+ <section class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">SOMO JIPYA</p><h2>Sajili somo</h2></div></div>
+  <form class="inline-form" onsubmit="event.preventDefault();go('/subjects',{name:v('sbn')},()=>{toast('Somo limeongezwa.');subs()})"><label class="field-block"><span>Jina la somo</span><input id="sbn" placeholder="Mfano: Agriculture" required></label><button class="primary-button">${ic('plus',16)} Sajili</button></form></section>
+ <section class="panel data-panel"><div class="panel-heading"><div><p class="eyebrow">ORODHA</p><h2>Masomo yote <span class="count-bubble">${s.length}</span></h2></div></div>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>SOMO</th><th></th></tr></thead><tbody>${s.map(x=>`<tr><td><div class="table-person"><span class="table-avatar">${esc(x.name.charAt(0))}</span><strong>${esc(x.name)}</strong></div></td><td style="text-align:right"><button class="row-action danger-action" aria-label="Ondoa ${esc(x.name)}" onclick="del('/subjects/${x.id}',subs)">${ic('trash',15)}</button></td></tr>`).join('')}</tbody></table></div>
+  <div class="panel-footnote"><span class="footnote-dot"></span> Ukiondoa somo, mgawanyo wa walimu na alama zake zote zinafutwa pia.</div></section></div>`)}
+
+/* ---------- WALIMU: madarasa yangu na kuingiza alama ---------- */
+let TA=[],TSEL=0;
+async function mine(){loading('Inapakia madarasa yako…');TA=await api('/assignments');
+ if(!TA.length)return main(`<div class="page-stack">${heading('ENEO LA MWALIMU','Madarasa yangu','Hapa utaona madarasa, mikondo na masomo uliyopewa.')}<section class="panel empty-workspace"><span class="empty-table-icon">${ic('book',22)}</span><h2>Bado hujapangiwa somo</h2><p>Msimamizi wa shule atakuongezea darasa, mkondo na somo kabla ya kuingiza matokeo.</p></section></div>`);
+ main(`<div class="page-stack">${heading('ENEO LA MWALIMU','Madarasa yangu','Chagua mgawo uliopewa, weka matokeo na ufuatilie mitihani ya somo lako.',`<div class="teacher-identity-chip"><span class="teacher-identity-icon">${ic('book',17)}</span><span><small>JUMLA YA MIGAWO</small><strong>${TA.length} ${TA.length==1?'somo':'masomo'}</strong></span></div>`)}
+ <section class="teacher-filters panel"><label class="field-block"><span>Darasa, mkondo na somo</span><select id="asg" onchange="TSEL=+this.value;teacherLoad()">${TA.map((a,i)=>`<option value="${i}">${esc(a.class)} ${esc(a.stream)} · ${esc(a.subject)}</option>`).join('')}</select></label>
+  <label class="field-block"><span>Muhula</span><select id="term" onchange="teacherLoad()"><option value="1">Muhula 1</option><option value="2">Muhula 2</option></select></label>
+  <label class="field-block year-field"><span>Mwaka</span><input id="year" type="number" value="${Y}" onchange="teacherLoad()"></label>
+  <div class="selected-assignment-summary"><span class="status-dot"></span><span id="sum">—</span></div></section>
+ <div id="tw"></div></div>`);TSEL=0;teacherLoad()}
+async function teacherLoad(){
+ const a=TA[TSEL],t=v('term'),y=v('year'),ex=($('#exn')&&$('#exn').value)||'Test 1';window.S={c:a.class_id,m:a.stream,s:a.subject_id};
+ $('#sum').innerHTML=`Unaingiza alama za <b>${esc(a.subject)}</b>`;
+ const [r,cp]=await Promise.all([api(`/marks?class_id=${a.class_id}&stream=${a.stream}&subject_id=${a.subject_id}&term=${t}&year=${y}&exam=${encodeURIComponent(ex)}`),api(`/compare?class_id=${a.class_id}&stream=${a.stream}&subject_id=${a.subject_id}&year=${y}`)]).catch(e=>{fail(e);return[[],{exams:[],students:[]}]});
+ const tests=cp.exams.filter(e=>e.term==t),filled=r.filter(x=>x.marks!=null).length;
+ $('#tw').innerHTML=`<div class="page-stack">
+ <section class="teacher-summary-grid"><article class="teacher-summary-card"><span class="teacher-summary-icon">${ic('users',17)}</span><small>WANAFUNZI</small><strong>${r.length}</strong><span>${esc(a.class)} · Mkondo ${esc(a.stream)}</span></article>
+  <article class="teacher-summary-card"><span class="teacher-summary-icon mint">${ic('clip',17)}</span><small>TEST ZILIZOHIFADHIWA</small><strong>${tests.length}</strong><span>Muhula ${t} · ${y}</span></article>
+  <article class="teacher-summary-card"><span class="teacher-summary-icon gold">${ic('cal',17)}</span><small>MUHULA ULIOCHAGULIWA</small><strong class="term-summary">Muhula ${t}</strong><span>Mwaka wa masomo ${y}</span></article></section>
+ <section class="teacher-work-grid">
+  <article class="panel grade-entry-panel"><div class="panel-heading"><div><p class="eyebrow">INGIZA MATOKEO</p><h2>Alama za mtihani <span class="soft-badge">${esc(a.subject)}</span></h2><p class="panel-subtitle">Ukitumia jina la test lililopo, alama zake zitasasishwa.</p></div><span class="step-mark">01</span></div>
+  ${!r.length?`<div class="empty-inline"><span class="empty-inline-icon">${ic('users',17)}</span><div><strong>Hakuna wanafunzi kwenye darasa hili.</strong><span>Wasiliana na msimamizi ili asajili wanafunzi wa ${esc(a.class)} ${esc(a.stream)}.</span></div></div>`:`
+   <div class="test-meta-grid"><label class="field-block"><span>Jina la test / mtihani</span><input id="exn" list="exl" value="${esc(ex)}" onchange="teacherLoad()" placeholder="Mfano: Test 1"><datalist id="exl"><option>Test 1<option>Test 2<option>Midterm<option>Terminal<option>Annual</datalist></label><label class="field-block"><span>Alama ya juu</span><div class="input-suffix"><input value="100" disabled><span>alama</span></div></label></div>
+   <div class="grade-list-toolbar"><div><strong>Orodha ya wanafunzi</strong><span id="cnt">${filled} / ${r.length} wamejazwa</span></div><span class="grade-total-pill">${ic('check',13)} Alama 0–100</span></div>
+   <div class="table-scroll grade-table-scroll"><table class="data-table grade-table" id="gt"><thead><tr><th>#</th><th>MWANAFUNZI</th><th>ALAMA <small>/ 100</small></th></tr></thead><tbody>${r.map((x,i)=>`<tr><td class="row-number">${String(i+1).padStart(2,'0')}</td><td><div class="table-person"><span class="table-avatar">${esc(x.name.charAt(0))}</span><strong>${esc(x.name)}</strong></div></td><td><input class="score-input" type="number" min="0" max="100" step="0.5" data-id="${x.student_id}" value="${x.marks??''}" placeholder="—" oninput="cnt()" aria-label="Alama ya ${esc(x.name)}"></td></tr>`).join('')}</tbody></table></div>
+   <div class="grade-form-bottom"><span><i class="footnote-dot"></i> Unaweza kuacha nafasi wazi kwa mwanafunzi asiyefanya mtihani.</span><button class="primary-button" onclick="saveM()">${ic('save',16)} Hifadhi matokeo ${ic('arrow',15)}</button></div>`}</article>
+  <aside class="panel teacher-history-panel"><div class="panel-heading"><div><p class="eyebrow">HISTORIA YA SOMO</p><h2>Tests zilizopita</h2></div><span class="subtle-count">${tests.length}</span></div>
+   ${tests.length?`<div class="teacher-test-list">${tests.map((e,i)=>`<div class="teacher-test-entry"><article class="teacher-test-card"><div class="teacher-test-index">${String(i+1).padStart(2,'0')}</div><div class="teacher-test-main"><strong>${esc(e.exam)}</strong><span>${e.n} wanafunzi · juu ${e.max} · chini ${e.min}</span><small>Ufaulu ${e.pass}%</small></div><span class="average-chip ${e.avg<45?'low':''}">${e.avg}</span><button class="test-review-button" onclick="$('#exn').value='${esc(e.exam).replace(/'/g,"\\'")}';teacherLoad()">Fungua</button></article></div>`).join('')}</div>`
+   :`<div class="teacher-history-empty"><span class="history-empty-icon">${ic('clip',20)}</span><strong>Hakuna test iliyohifadhiwa</strong><p>Baada ya kuhifadhi test ya kwanza, historia na wastani wake utaonekana hapa.</p></div>`}
+   <div class="history-note"><span class="note-spark">✦</span><p>Unaweza kuhifadhi test nyingi kwa somo moja ndani ya muhula huu ili kufuatilia maendeleo.</p></div></aside>
+ </section>
+ ${cp.exams.length?cmpHtml(cp):''}</div>`}
+const cnt=()=>{const i=[...$('#gt').querySelectorAll('input')];$('#cnt').textContent=`${i.filter(x=>x.value!=='').length} / ${i.length} wamejazwa`};
+const saveM=()=>go('/marks',{class_id:S.c,stream:S.m,subject_id:S.s,term:v('term'),year:v('year'),exam:v('exn'),rows:[...$('#gt').querySelectorAll('input')].map(i=>({student_id:i.dataset.id,marks:i.value}))},()=>{toast('Matokeo yamehifadhiwa.');teacherLoad()});
+
+/* ---------- Ulinganisho wa mitihani (mwalimu na admin) ---------- */
+function cmpHtml(d){const E=d.exams,L=E.length;
+ return `<section class="panel comparison-panel data-panel"><div class="panel-heading"><div><p class="eyebrow">ULINGANISHO</p><h2>Analysis ya somo kwa kila mtihani</h2></div><span class="compare-symbol">${ic('trend',16)}</span></div>
+ <div class="table-scroll"><table class="data-table comparison-table"><thead><tr><th>MTIHANI</th><th>WALIOFANYA</th><th>WASTANI</th><th>JUU</th><th>CHINI</th><th>UFAULU</th></tr></thead><tbody>${E.map(e=>`<tr><td><strong>M${e.term}: ${esc(e.exam)}</strong></td><td>${e.n}</td><td>${chip(e.avg)}</td><td>${e.max}</td><td>${e.min}</td><td>${e.pass}%</td></tr>`).join('')}</tbody></table></div>
+ <div class="panel-heading" style="border-top:1px solid var(--line)"><div><p class="eyebrow">KILA MWANAFUNZI</p><h2>Ulinganisho wa wanafunzi</h2></div></div>
+ <div class="table-scroll"><table class="data-table comparison-table"><thead><tr><th>MWANAFUNZI</th>${E.map(e=>`<th>M${e.term}: ${esc(e.exam).toUpperCase()}</th>`).join('')}${L>1?'<th>MABADILIKO</th>':''}</tr></thead><tbody>${d.students.map(x=>{const a=E.map(e=>x.marks[e.key]),p=a[L-2],l=a[L-1],df=L>1&&p!=null&&l!=null?l-p:null;
+ return`<tr><td><strong>${esc(x.name)}</strong></td>${a.map(z=>`<td>${z??'—'}</td>`).join('')}${L>1?`<td>${df==null?'—':`<span class="change-pill ${df>=0?'positive':'negative'}">${df>=0?'▲ +':'▼ '}${df.toFixed(1)}</span>`}</td>`:''}</tr>`}).join('')}</tbody></table></div></section>`}
+async function cmp(c,m,s,y){const d=await api(`/compare?class_id=${c}&stream=${m}&subject_id=${s}&year=${y}`);
+ $('#out').innerHTML=d.exams.length?cmpHtml(d):`<section class="panel">${empty('clip','Hakuna matokeo bado.','Alama zikihifadhiwa, ulinganisho utaonekana hapa.')}</section>`}
+
+/* ---------- ADMIN: Analysis ---------- */
+async function results(){loading();const [c,s]=await Promise.all([api('/classes'),api('/subjects')]);
+ main(`<div class="page-stack">${heading('MATOKEO & UCHAMBUZI','Analysis','Chambua matokeo ya darasa kwa muhula, nafasi, division na ulinganishe somo kwa mitihani.')}
+ <section class="panel filter-panel"><div class="filter-panel-title"><span class="filter-mark">${ic('chart',15)}</span><div><strong>Analysis ya darasa</strong><span>Chagua darasa, mkondo na muhula</span></div></div>
+  <div class="filter-fields"><label class="field-block"><span>Darasa</span><select id="c1">${opts(c)}</select></label><label class="field-block"><span>Mkondo</span><select id="m1">${sm(1)}</select></label>${termSel()}<button class="primary-button" style="align-self:end" onclick="runAn()">Onyesha</button></div></section>
+ <div id="out1"></div>
+ <section class="panel filter-panel"><div class="filter-panel-title"><span class="filter-mark">${ic('trend',15)}</span><div><strong>Ulinganisho wa somo</strong><span>Linganisha mitihani yote ya somo kwa mwaka</span></div></div>
+  <div class="filter-fields"><label class="field-block"><span>Darasa</span><select id="c2">${opts(c)}</select></label><label class="field-block"><span>Mkondo</span><select id="m2">${sm(1)}</select></label><label class="field-block"><span>Somo</span><select id="s2">${opts(s)}</select></label><label class="field-block year-field"><span>Mwaka</span><input id="y2" type="number" value="${Y}"></label><button class="primary-button" style="align-self:end" onclick="cmp(v('c2'),v('m2'),v('s2'),v('y2'))">Linganisha</button></div></section>
+ <div id="out"></div><div id="rep"></div></div>`)}
+async function runAn(){const d=await api(`/analysis?class_id=${v('c1')}&stream=${v('m1')}&term=${v('term')}&year=${v('year')}`).catch(e=>{fail(e)}),o=$('#out1');if(!d)return;
+ if(!d.ranking.length)return o.innerHTML=`<section class="panel">${empty('chart','Hakuna matokeo bado.','Walimu wakihifadhi alama za darasa hili, uchambuzi utaonekana hapa.')}</section>`;
+ const dv=d.divisions,top=d.ranking[0];
+ o.innerHTML=`<div class="page-stack"><section class="result-metric-grid">
+  <div class="result-metric"><span class="result-metric-icon">${ic('trend',15)}</span><small>WASTANI WA DARASA</small><strong>${d.classAvg}</strong><span>Wanafunzi ${d.ranking.length}</span></div>
+  <div class="result-metric"><span class="result-metric-icon success">${ic('cap',15)}</span><small>WA KWANZA</small><strong style="font-size:15px">${esc(top.name)}</strong><span>Wastani ${top.avg} · Div ${top.division??'-'}</span></div>
+  <div class="result-metric"><span class="result-metric-icon blue">${ic('book',15)}</span><small>SOMO LA JUU</small><strong style="font-size:15px">${esc(d.subjects[0]?.name||'—')}</strong><span>Wastani ${d.subjects[0]?.avg??'—'}</span></div>
+  <div class="result-metric"><span class="result-metric-icon amber">${ic('clip',15)}</span><small>DIVISION</small><strong style="font-size:15px">${Object.entries(dv).map(([k,x])=>`${k}:${x}`).join(' · ')}</strong><span>Idadi kwa kila division</span></div></section>
+ <section class="panel"><div class="panel-heading"><div><p class="eyebrow">UCHAMBUZI WA SOMO</p><h2>Wastani kwa somo</h2></div></div><div class="subject-progress-list">${d.subjects.map(s=>`<div class="subject-progress-row"><div class="subject-progress-label"><span class="subject-dot"></span><strong>${esc(s.name)}</strong><span>${s.avg}</span></div><div class="subject-progress-track"><i style="width:${s.avg}%"></i></div></div>`).join('')}</div></section>
+ <section class="panel data-panel"><div class="panel-heading"><div><p class="eyebrow">ORODHA YA NAFASI</p><h2>Nafasi za wanafunzi <span class="count-bubble">${d.ranking.length}</span></h2></div></div>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>#</th><th>MWANAFUNZI</th><th>JUMLA</th><th>WASTANI</th><th>POINTS</th><th>DIV</th><th></th></tr></thead><tbody>${d.ranking.map(r=>`<tr><td class="row-number">${String(r.position).padStart(2,'0')}</td><td><div class="table-person"><span class="table-avatar">${esc(r.name.charAt(0))}</span><strong>${esc(r.name)}</strong></div></td><td>${r.total}</td><td>${chip(r.avg)}</td><td>${r.points}</td><td><span class="class-pill">${r.division??'—'}</span></td><td><button class="link-action" onclick="report(${r.id}).catch(fail)">Ripoti</button></td></tr>`).join('')}</tbody></table></div></section></div>`}
+
+/* ---------- ADMIN: Matokeo yote + kutuma kwa wazazi ---------- */
+async function sheet(){loading();const c=await api('/classes');
+ main(`<div class="page-stack">${heading('MATOKEO YA MUHULA','Matokeo yote','Alama za masomo yote kwa kila mwanafunzi, ripoti na kutuma kwa wazazi.')}
+ <section class="panel filter-panel"><div class="filter-panel-title"><span class="filter-mark">${ic('clip',15)}</span><div><strong>Chagua darasa</strong><span>Alama ya somo ni wastani wa mitihani yote ya muhula huo</span></div></div>
+  <div class="filter-fields" style="grid-template-columns:repeat(4,minmax(0,1fr)) auto"><label class="field-block"><span>Darasa</span><select id="c1">${opts(c)}</select></label><label class="field-block"><span>Mkondo</span><select id="m1">${sm(1)}</select></label>${termSel()}<button class="primary-button" style="align-self:end" onclick="loadSheet()">Onyesha</button></div></section>
+ <div id="out"></div><div id="rep"></div></div>`)}
+function contact(r,t,y){const p=r.parent;if(!p)return'<span class="muted-text">(hana mzazi)</span>';
+ const m=encodeURIComponent((window.LANG==='en'?`Results for ${r.name}, Term ${t}/${y}: Average ${r.avg}, Division ${r.division??'-'}, Position ${r.position??'-'}. Log in to the school system to see the full report.`:`Matokeo ya ${r.name} Muhula ${t}/${y}: Wastani ${r.avg}, Division ${r.division??'-'}, Nafasi ${r.position??'-'}. Ingia kwenye mfumo wa shule kuona ripoti kamili.`));
+ let ph=(p.phone||'').replace(/\D/g,'');if(ph.startsWith('0'))ph='255'+ph.slice(1);
+ return(ph?`<a class="link-action" href="https://wa.me/${ph}?text=${m}" target="_blank">WhatsApp</a>`:'')+(p.email?`<a class="link-action" href="mailto:${esc(p.email)}?subject=${encodeURIComponent((window.LANG==='en'?'Results for ':'Matokeo ya ')+r.name)}&body=${m}">Email</a>`:'')}
+const release=ids=>ids.length?go('/release',{ids,term:v('term'),year:v('year')},()=>{toast('Matokeo yametumwa: mzazi ataona kwenye akaunti yake');loadSheet()}):toast('Hakuna wa kutuma',1);
+const pdf=id=>report(id).then(()=>window.print()).catch(fail);
+async function loadSheet(){const d=await api(`/sheet?class_id=${v('c1')}&stream=${v('m1')}&term=${v('term')}&year=${v('year')}`).catch(e=>{fail(e)});if(!d)return;
+ const t=v('term'),y=v('year');window.SH=d;
+ if(!d.rows.length)return $('#out').innerHTML=`<section class="panel">${empty('users','Hakuna wanafunzi kwenye darasa hili.','Sajili wanafunzi kwanza kwenye ukurasa wa Wanafunzi.')}</section>`;
+ $('#out').innerHTML=`<section class="panel data-panel"><div class="panel-heading"><div><p class="eyebrow">MUHULA ${t} · ${y}</p><h2>Matokeo ya wanafunzi <span class="count-bubble">${d.rows.length}</span></h2></div><button class="primary-button" style="min-height:32px" onclick="release(SH.rows.filter(r=>r.n&&!r.sent).map(r=>r.id))">${ic('send',14)} Tuma kwa wote waliobaki</button></div>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>MWANAFUNZI</th>${d.subjects.map(s=>`<th>${esc(s.slice(0,7)).toUpperCase()}</th>`).join('')}<th>WASTANI</th><th>DIV</th><th>NAFASI</th><th>HALI</th><th>VITENDO</th></tr></thead><tbody>${d.rows.map(r=>`<tr><td><div class="table-person"><span class="table-avatar">${esc(r.name.charAt(0))}</span><strong>${esc(r.name)}</strong></div></td>${d.subjects.map(s=>`<td>${r.marks[s]??'—'}</td>`).join('')}<td>${r.n?chip(r.avg):'—'}</td><td>${r.division??'—'}</td><td>${r.position??'—'}</td><td>${r.sent?'<span class="status-pill status-active"><i></i> Imetumwa</span>':'<span class="status-pill">Bado</span>'}</td><td style="white-space:nowrap"><button class="link-action" onclick="report(${r.id}).catch(fail)">Ripoti</button><button class="link-action" onclick="pdf(${r.id})">PDF</button>${r.n?`<button class="link-action" onclick="release([${r.id}])">Tuma</button>`:''}${contact(r,t,y)}</td></tr>`).join('')}</tbody></table></div></section>`}
+
+/* ---------- MZAZI na ripoti ya mwanafunzi ---------- */
+async function kids(){loading();const st=await api('/students');
+ if(!st.length)return main(`<div class="page-stack">${heading('TAARIFA ZA MZAZI','Maendeleo ya mtoto','Matokeo ya mtoto wako yataonekana hapa baada ya akaunti kuunganishwa na mwanafunzi.')}<section class="panel empty-workspace"><span class="empty-table-icon">${ic('users',22)}</span><h2>Akaunti haijaunganishwa na mwanafunzi bado</h2><p>Wasiliana na msimamizi wa shule ili ahakikishe akaunti yako imeunganishwa na taarifa za mtoto wako.</p></section></div>`);
+ window.KIDS=st;
+ main(`<div class="page-stack">${heading('TAARIFA ZA MZAZI','Maendeleo ya mtoto','Angalia matokeo, mwenendo wa masomo na ripoti ya kila muhula.',`<div class="parent-safe-label"><span class="parent-safe-icon">${ic('cap',17)}</span><span><small>TAARIFA ZINAZOONEKANA</small><strong>${st.length} ${st.length==1?'mwanafunzi':'wanafunzi'}</strong></span></div>`)}
+ <section class="panel filter-panel"><div class="filter-panel-title"><span class="filter-mark">${ic('cap',15)}</span><div><strong>Chagua mtoto na muhula</strong><span>Matokeo huonekana baada ya shule kuyatuma</span></div></div>
+  <div class="filter-fields" style="grid-template-columns:2fr 1fr 1fr auto"><label class="field-block"><span>Mwanafunzi</span><select id="kid">${st.map(x=>`<option value="${x.id}">${esc(x.name)} (${esc(x.class)} ${esc(x.stream)})</option>`).join('')}</select></label>${termSel()}<button class="primary-button" style="align-self:end" onclick="report(v('kid')).catch(fail)">Angalia</button></div></section>
+ <div id="rep"></div></div>`);report(st[0].id).catch(()=>{$('#rep').innerHTML=`<section class="panel">${empty('book','Matokeo ya muhula huu bado hayajatumwa','Shule itakutumia matokeo yakiwa tayari. Chagua muhula mwingine ukitaka.')}</section>`})}
+
+const REM={A:'Bora sana',B:'Vizuri',C:'Wastani',D:'Dhaifu',F:'Hajafaulu'};
+function recs(d){const R=d.results;if(!R.length)return[];const pv=Object.fromEntries((d.prev||[]).map(x=>[x.subject,x.marks])),L=a=>a.map(x=>`${x.subject} (${x.marks})`).join(', '),
+ S=[...R].sort((a,b)=>b.marks-a.marks),good=S.filter(x=>x.marks>=65).slice(0,3),weak=[...S].reverse().filter(x=>x.marks<45),mid=S.filter(x=>x.marks>=45&&x.marks<65),
+ down=R.filter(x=>pv[x.subject]!=null&&x.marks<=pv[x.subject]-5),up=R.filter(x=>pv[x.subject]!=null&&x.marks>=pv[x.subject]+5),o=[];
+ if(good.length)o.push(`Nguvu: anafanya vizuri katika ${L(good)}. Aendelee kudumisha kiwango hiki.`);
+ weak.forEach(x=>o.push(x.marks<30?`${x.subject} (${x.marks}): hajafikia kiwango cha kufaulu. Anahitaji msaada wa haraka: masomo ya ziada, mazoezi ya kila siku na kukutana na mwalimu wa somo.`:`${x.subject} (${x.marks}): yuko chini ya wastani. Aongeze muda wa kujisomea, afanye maswali ya mitihani iliyopita na aulize mwalimu asipoelewa.`));
+ if(mid.length)o.push(`Masomo yenye nafasi ya kuboresha: ${L(mid)}. Kwa mazoezi ya ziada anaweza kufikia gredi B.`);
+ if(down.length)o.push(`Ameshuka ukilinganisha na Muhula 1: ${down.map(x=>`${x.subject} (${pv[x.subject]} → ${x.marks})`).join(', ')}. Mzazi na mwalimu wafuatilie chanzo (mahudhurio, kazi za nyumbani, nidhamu ya kujisomea).`);
+ if(up.length)o.push(`Ameimarika ukilinganisha na Muhula 1: ${up.map(x=>`${x.subject} (${pv[x.subject]} → ${x.marks})`).join(', ')}. Pongezi, aendelee na juhudi hizo.`);
+ o.push({I:'Kwa ujumla matokeo ni bora (Division I). Alenge kuboresha masomo yaliyo chini ya gredi A.',II:'Kwa ujumla matokeo ni mazuri (Division II). Akiimarisha masomo dhaifu anaweza kufika Division I.',III:'Kwa ujumla yuko kiwango cha kati (Division III). Alenge kuongeza ufaulu katika masomo dhaifu ili kuboresha Division.',IV:'Kwa ujumla ufaulu uko chini (Division IV). Anahitaji mpango wa kujisomea na ufuatiliaji wa karibu.','0':'Ufaulu wa jumla uko chini sana. Anahitaji mpango maalum: ratiba ya masomo ya ziada na ufuatiliaji wa karibu wa walimu na wazazi.'}[d.division]||'');
+ return o.filter(Boolean)}
+async function report(id){const t=v('term'),y=v('year'),d=await api(`/report/${id}?term=${t}&year=${y}`),b=$('#rep'),rc=recs(d),ini=esc(d.student.charAt(0));
+ b.innerHTML=`<div class="page-stack">
+ <section class="child-profile-banner"><div class="child-profile-main"><div class="child-profile-avatar">${ini}</div><div><p class="eyebrow">TAARIFA YA MWANAFUNZI</p><h2>${esc(d.student)}</h2><div class="child-profile-meta"><span>${ic('cap',14)} ${esc(d.class)}</span><span>${ic('cal',13)} Muhula ${t} · ${y}</span></div></div></div><div class="child-profile-badge"><span class="status-dot"></span> Taarifa zimesasishwa</div></section>
+ <section class="parent-summary-grid"><article class="parent-summary-card"><span class="parent-summary-icon">${ic('trend',17)}</span><small>WASTANI WA ALAMA</small><strong>${d.results.length?d.avg:'—'}</strong><span>${d.prevAvg!=null?`Muhula 1: ${d.prevAvg} ${d.avg>=d.prevAvg?'▲ +':'▼ '}${(d.avg-d.prevAvg).toFixed(1)}`:'Wastani wa masomo yote'}</span></article>
+  <article class="parent-summary-card"><span class="parent-summary-icon mint">${ic('book',17)}</span><small>DIVISION</small><strong>${d.division??'—'}</strong><span>Points ${d.points} · Jumla ${d.total}</span></article>
+  <article class="parent-summary-card"><span class="parent-summary-icon gold">${ic('users',17)}</span><small>NAFASI DARASANI</small><strong>${d.position??'—'}</strong><span>Kati ya ${d.outOf}</span></article></section>
+ <section class="panel data-panel" id="repcard"><div class="panel-heading"><div><p class="eyebrow">RIPOTI YA MAENDELEO YA MWANAFUNZI</p><h2>Alama za masomo <span class="count-bubble">${d.results.length}</span></h2></div><button class="outline-button noprint" onclick="window.print()">${ic('print',15)} Pakua PDF</button></div>
+  ${d.results.length?`<div class="table-scroll"><table class="data-table"><thead><tr><th>SOMO</th><th>ALAMA</th><th>GREDI</th><th>MAONI</th></tr></thead><tbody>${d.results.map(r=>`<tr><td><strong>${esc(r.subject)}</strong></td><td>${chip(r.marks)}</td><td><span class="grade-chip ${r.grade}">${r.grade}</span></td><td>${REM[r.grade]}</td></tr>`).join('')}</tbody></table></div>`:empty('book','Hakuna alama bado','Matokeo yataonekana walimu wakishahifadhi alama.')}</section>
+ <section class="dashboard-grid parent-content-grid"><article class="panel parent-subject-panel"><div class="panel-heading"><div><p class="eyebrow">MWENENDO KWA SOMO</p><h2>Muhtasari wa masomo</h2></div><span class="panel-count">${d.results.length} <span>masomo</span></span></div>
+  <div class="subject-progress-list">${d.results.map(r=>`<div class="subject-progress-row"><div class="subject-progress-label"><span class="subject-dot"></span><strong>${esc(r.subject)}</strong><span>${r.marks}</span></div><div class="subject-progress-track"><i style="width:${r.marks}%"></i></div><small>${r.marks>=45?'Anaendelea vizuri':'Inahitaji ufuatiliaji'}</small></div>`).join('')||'<div class="empty-inline"><div><strong>Muhtasari utaonekana baada ya matokeo ya kwanza.</strong></div></div>'}</div></article>
+  <article class="panel parent-encouragement"><div class="encouragement-star">✦</div><p class="eyebrow">UCHAMBUZI NA USHAURI</p><h2>Maendeleo hujengwa hatua kwa hatua.</h2><ul class="report-advice">${rc.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>Hakuna alama za kuchambua bado.</li>'}</ul></article></section></div>`;
+ $('#rep').scrollIntoView({behavior:'smooth'})}
+
+init();
+</script></body></html>
